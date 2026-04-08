@@ -1,0 +1,146 @@
+# Data Versioning – Why Git Isn’t Enough?
+
+Git is amazing for versioning code — small, text-based files that change in predictable ways. But the moment you try to use Git to version data, everything starts breaking. Here’s why Git isn’t enough for real-world ML data versioning:
+
+### Git is not built for large files
+- Git is optimized for kilobytes or a few megabytes.
+- ML datasets are often gigabytes to terabytes.
+- Git tries to store every version inside the repository → it becomes slow, bloated, and unusable.
+
+### Git can’t handle binary data well
+- Datasets are usually CSVs, images, audio, video, Parquet, etc.
+- For Git, these are just binary blobs.
+- Git can’t diff them meaningfully → it stores the entire file every time something changes.
+
+This leads to enormous repositories.
+
+### Git doesn’t support dataset lineage
+When working with ML data, you need to track:
+- Where did the data come from?
+- What transformations were applied?
+- Which version of data produced which model?
+
+Git can’t track:
+- Data pipelines,
+- Transformation steps,
+- Data quality checks.
+
+### No built in dataset metadata
+ML workflows need metadata like:
+- Schema changes,
+- Statistics (min/max, missing values),
+- Train/validation splits,
+- Provenance.
+
+Git provides none of this.
+
+### Git isn’t good for collaboration on large datasets
+- Multiple people pushing and pulling multi-GB files → slow and painful.
+- Merge conflicts on binary files → impossible.
+- CI/CD pipelines break when repos get too large.
+
+### Storage costs explode
+Git repository size grows exponentially.
+Cloud providers charge for storage + bandwidth.
+Teams end up spending more time and money managing Git than managing data.
+
+### ML workflows require experiment level tracking
+You typically need to answer:
+- “Which dataset version did I use for model v3?”
+- “What changed between dataset v1.4 → v1.5?”
+- “Why did accuracy drop yesterday?”
+
+Git cannot correlate:
+- Data version
+- Code version
+- Experiment logs
+- Model artifacts
+
+ML tools like DVC, LakeFS, MLflow, Delta Lake are built to do this.
+
+# In simple words
+Git is great for text-based code.  
+ML needs versioning for huge, complex, constantly changing datasets, and Git simply wasn’t designed for that.
+
+Data versioning tools provide:
+- Efficient storage
+- Deduplication
+- Lineage tracking
+- Metadata
+- Reproducible ML pipelines
+
+That’s why Git alone is not enough.
+
+# What is DVC?
+
+Think of DVC (Data Version Control) as Git for your data.
+
+Git works great for: code and small text files.
+
+But Git cannot handle:
+
+- Large datasets
+- Model files
+- Data stored in cloud storage
+- This is where DVC helps.
+
+DVC lets you:
+
+- Track versions of datasets
+- Store large files outside Git (S3, GCS, Azure, local storage)
+- Keep your Git repo clean and lightweight
+- Reproduce your ML project anytime
+
+### Wine Prediction Example
+
+Imagine you're building a simple Wine Quality Prediction ML model.
+
+You have:
+
+- A CSV file → wine_data_sample.csv
+- A training script → train.py
+- A Git repo
+
+Your dataset may change over time:
+
+- You add more rows
+- You clean the data
+- You update features
+
+DVC allows you to version these dataset changes without storing the actual data inside Git.
+
+Without DVC -> Your CSV sits in your repo → Git becomes slow & heavy.
+
+With DVC -> Git stores only a small metadata file:
+
+- wine_data_sample.csv.dvc
+- Actual data is stored in: `S3 bucket` or any external storage
+
+You pull/push data similar to git pull / git push.
+
+### How DVC Works (Very Simple Flow)
+
+Add your dataset to DVC
+
+`dvc add wine_data_sample.csv`
+
+Commit the .dvc file to Git
+
+`git add wine_data_sample.csv.dvc`
+`git commit -m "Track dataset with DVC"`
+
+Configure remote storage (e.g., S3)
+
+`dvc remote add -d myremote s3://mybucket/dvcstore`
+
+Push data to S3
+
+`dvc push`
+
+Anyone with your Git repo simply runs:
+
+`dvc pull`
+
+…and they get the exact same dataset version.
+
+
